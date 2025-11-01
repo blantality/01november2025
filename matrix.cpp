@@ -1,82 +1,86 @@
 #include <iostream>
 
-void destroy(int **mtx, size_t created);
-int **create(size_t rows, size_t cols);
-void construct(int **mtx, int init, size_t rows, size_t cols);
-void input(int **mtx, size_t rows, size_t cols);
-void output(int **mtx, size_t rows, size_t cols);
-
-int main() {
-  size_t rows = 0, cols = 0;
-  std::cin >> rows >> cols;
-  if (!std::cin) {
-    std::cerr << "Bad input!\n";
-    return 2;
-  }
-  int **matrix = nullptr;
-  matrix = create(rows, cols);
-  try {
-    matrix = create(rows, cols);
-  } catch (const std::bad_alloc &e) {
-    destroy(matrix, rows);
-    std::cerr << e.what() << '\n';
-    return 1;
-  }
-  std::cout << "Created!\n";
-  construct(matrix, 0, rows, cols);
-  input(matrix, rows, cols);
-  if (!std::cin) {
-    std::cerr << "Bad input!\n";
-    destroy(matrix, rows);
-    return 2;
-  }
-  output(matrix, rows, cols);
-  destroy(matrix, rows);
-}
-
 void destroy(int **mtx, size_t created) {
-  for (size_t i = 0; i < created; ++i) {
+  for (size_t i = 0; i < created; ++i)
     delete[] mtx[i];
-  }
   delete[] mtx;
 }
 
-int **create(size_t rows, size_t cols) {
+int **convert(const int *t, size_t n, const size_t *lns, size_t rows) {
   int **mtx = new int *[rows];
-  size_t created = 0;
+  size_t created = 0, now = 0;
+
   try {
     for (size_t i = 0; i < rows; ++i) {
-      mtx[i] = new int[cols];
+      mtx[i] = new int[lns[i]];
+      for (size_t j = 0; j < lns[i]; ++j)
+        mtx[i][j] = t[now + j];
+      now += lns[i];
       ++created;
     }
-  } catch (const std::bad_alloc &e) {
+  } catch (const std::bad_alloc &) {
     destroy(mtx, created);
     throw;
   }
+
   return mtx;
 }
 
-void construct(int **mtx, int init, size_t rows, size_t cols) {
+void output(int **mtx, const size_t *lns, size_t rows) {
+  std::cout << "Resulting matrix:\n";
   for (size_t i = 0; i < rows; ++i) {
-    for (size_t j = 0; j < cols; ++j) {
-      mtx[i][j] = init;
-    }
-  }
-}
-
-void input(int **mtx, size_t rows, size_t cols) {
-  for (size_t i = 0; i < rows; ++i) {
-    for (size_t j = 0; j < cols; ++j) {
-      std::cin >> mtx[i][j];
-    }
-  }
-}
-
-void output(int **mtx, size_t rows, size_t cols) {
-  for (size_t i = 0; i < rows; ++i) {
-    for (size_t j = 0; j < cols - 1; ++j) {
+    for (size_t j = 0; j < lns[i]; ++j)
       std::cout << mtx[i][j] << ' ';
-    }
-    std::cout << mtx[i][cols - 1] << '\n';
+    std::cout << '\n';
   }
+}
+
+int main() {
+  size_t rows;
+  std::cout << "Rows: ";
+  if (!(std::cin >> rows)) {
+    std::cerr << "Error: invalid input.\n";
+    return 1;
+  }
+
+  size_t *lns = new size_t[rows];
+  std::cout << "Lengths of each row: ";
+  for (size_t i = 0; i < rows; ++i) {
+    if (!(std::cin >> lns[i])) {
+      std::cerr << "Error: invalid input.\n";
+      delete[] lns;
+      return 1;
+    }
+  }
+
+  size_t n = 0;
+  for (size_t i = 0; i < rows; ++i)
+    n += lns[i];
+
+  int *t = new int[n];
+  std::cout << "Enter " << n << " elements of array: ";
+  for (size_t i = 0; i < n; ++i) {
+    if (!(std::cin >> t[i])) {
+      std::cerr << "Invalid input.\n";
+      delete[] t;
+      delete[] lns;
+      return 1;
+    }
+  }
+
+  int **matrix = nullptr;
+  try {
+    matrix = convert(t, n, lns, rows);
+  } catch (const std::bad_alloc &e) {
+    std::cerr << "Memory allocation error: " << e.what() << '\n';
+    delete[] t;
+    delete[] lns;
+    return 1;
+  }
+
+  output(matrix, lns, rows);
+
+  destroy(matrix, rows);
+  delete[] t;
+  delete[] lns;
 }
