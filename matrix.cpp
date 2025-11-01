@@ -15,12 +15,13 @@ int **create(size_t rows, size_t cols)
   size_t created = 0;
   try 
   {  
-    for (; created < rows, created++) 
+    for (size_t i = 0; i < rows; ++i) 
     {
-      mtx [created] = new int[cols];
+      mtx [i] = new int[cols];
+      created++;
     }
   }
-  catch (const std::bad_alloc & e) 
+  catch (const std::bad_alloc &e) 
   {
     destroy(mtx, created);
     throw;
@@ -31,7 +32,7 @@ int **create(size_t rows, size_t cols)
 
 
 int main() {
-  int ** matrix = null;
+  int ** matrix = nullptr;
   try
   {
   matrix = create(5, 5);
